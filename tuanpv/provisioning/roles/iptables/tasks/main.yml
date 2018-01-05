@@ -1,0 +1,36 @@
+---
+
+
+
+- name: Ubuntu | Ensure required base packages are present
+  apt: name={{ item }} state=latest update_cache=yes
+  with_items:
+    - iptables-persistent
+  tags:
+    - iptables
+    - security
+
+
+- name: Ubuntu | Update file iptables
+  template: src={{ group_names[0] }}.sh dest=/opt/iptables.sh owner=root group=root mode=0777
+  register: iptables
+  tags:
+    - iptables
+    - iptables_config
+    - security
+
+
+- name: Ubuntu | Run scipts iptables
+  shell: /bin/sh /opt/iptables.sh
+  when: iptables.changed
+  tags:
+    - iptables
+    - iptables_config
+    - security
+
+
+- name: Ubuntu | Start iptables
+  service: name=iptables-persistent state=started enabled=yes
+  tags:
+    - iptables
+    - security

@@ -1,0 +1,131 @@
+---
+
+
+- name: Ubuntu | Create user
+  user: name={{ item.user }}
+        state=present
+        generate_ssh_key=yes ssh_key_bits=2048 shell=/bin/bash
+  with_items: users_add
+  tags:
+    - users
+
+
+- name: Ubuntu | Create sudo
+  template: src=sudo.j2 
+            dest=/etc/sudoers.d/{{ item.user }} owner=root group=root mode=0440
+  with_items: users_add_sudo
+  tags:
+    - users
+
+
+- name: Ubuntu | Add public key for user
+  copy: src=keys/{{use_keys}}/{{ item.user }}
+        dest=/home/{{ item.user }}/.ssh/authorized_keys
+        owner={{ item.user }} group={{ item.user }} mode=0600
+  with_items: users_add
+  tags:
+    - users
+
+
+- name: Ubuntu | Remove sudo
+  shell: rm -rf /etc/sudoers.d/{{ item.user }}
+  with_items: users_del_sudo
+  tags:
+    - users
+
+
+- name: Ubuntu | Remove user
+  user: name={{ item.user }}
+        state=absent
+        remove=yes
+  with_items: users_del
+  tags:
+    - users
+
+
+- name: Ubuntu | Remove sudo
+  shell: rm -rf /etc/sudoers.d/{{ item.user }}
+  with_items: users_del
+  tags:
+    - users
+
+
+- name: Ubuntu | Create encrypted password for root
+  command: python -c 'import crypt; print crypt.crypt("{{ password_root }}", "$6$saltCHdkHoodhMHJK8&**&^uJgJsalt$")'
+  register: password_root_encrypted
+  tags:
+    - users
+
+
+- name: Ubuntu | Change root password
+  user: >
+    name=root
+    password={{ password_root_encrypted.stdout }}
+  tags:
+    - users
+
+
+- name: Ubuntu | Create encrypted password for user
+  command: python -c 'import crypt; print crypt.crypt("{{ item.password }}", "$6$saltCHdkHoodhMHJK8&**&^uJgJsalt$")'
+  register: password_encrypted
+  with_items: users_add
+  tags:
+    - users
+
+
+- name: Ubuntu | Change password for acc
+  user: >
+    name="{{ item.item.user }}"
+    password="{{ item.stdout }}"
+  with_items: "{{ password_encrypted.results }}"
+  tags:
+    - users
+
+
+- name: Ubuntu | Fix path root
+  lineinfile: >
+    dest=/root/.bashrc
+    line='export PATH=/usr/bin:/bin:/root/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/local/bin'
+    state=present
+  tags:
+    - users
+
+
+- name: Ubuntu | Fix path user
+  lineinfile: >
+    dest=/home/{{ item.user }}/.bashrc
+    line='export PATH=/usr/bin:/bin:/root/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/local/bin'
+    state=present
+  with_items: users_add
+  tags:
+    - users
+
+
+- name: Ubuntu | Config timeout sudo
+  lineinfile: >
+    dest=/etc/sudoers
+    line='Defaults    env_reset, timestamp_timeout=30'
+    state=present
+  tags:
+    - users
+
+
+- name: Ubuntu | Configure security SSH
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    state=absent
+    regexp='^.*?{{ item }}'
+  with_items:
+    - "AllowUsers"
+  tags:
+    - users
+
+
+- name: Ubuntu | Config ssh User allow
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    line='AllowUsers {{ ssh_allow_users }}'
+    state=present
+  notify: restart ssh
+  tags:
+    - users

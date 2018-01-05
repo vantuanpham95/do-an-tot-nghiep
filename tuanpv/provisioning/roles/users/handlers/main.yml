@@ -1,0 +1,9 @@
+---
+
+
+- name: restart sshd
+  shell: service sshd restart
+
+
+- name: restart ssh
+  shell: service ssh restart

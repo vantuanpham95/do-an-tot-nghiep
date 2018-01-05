@@ -1,0 +1,251 @@
+---
+
+
+- name: Ubuntu | Set SSH Protocol to 2
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^Protocol " line="Protocol {{ Protocol }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH Port
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^Port " line="Port {{ Port_SSH }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH Listen IP
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^ListenAddress " line="ListenAddress {{ ansible_ssh_host }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set LogLevel to INFO
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^LogLevel "
+    line="LogLevel {{ LogLevel }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set Permissions on /etc/ssh/sshd_config
+  file: >
+    path=/etc/ssh/sshd_config
+    owner=root
+    group=root
+    mode=0600
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Disable SSH X11 Forwarding
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^X11Forwarding "
+    line="X11Forwarding {{ X11Forwarding }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH MaxAuthTries to 4 or Less
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^MaxAuthTries "
+    line="MaxAuthTries {{ MaxAuthTries }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH IgnoreRhosts to Yes
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^IgnoreRhosts "
+    line="IgnoreRhosts {{ IgnoreRhosts }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH HostbasedAuthentication to No
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^HostbasedAuthentication "
+    line="HostbasedAuthentication {{ HostbasedAuthentication }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Disable SSH Root Login
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^PermitRootLogin "
+    line="PermitRootLogin {{ PermitRootLogin }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH PermitEmptyPasswords to No
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^PermitEmptyPasswords "
+    line="PermitEmptyPasswords {{ PermitEmptyPasswords }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH PasswordAuthentication to No
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^PasswordAuthentication "
+    line="PasswordAuthentication {{ PasswordAuthentication }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Do Not Allow Users to Set Environment Options
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^PermitUserEnvironment "
+    line="PermitUserEnvironment {{ PermitUserEnvironment }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Use Only Approved Cipher in Counter Mode
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^Ciphers "
+    line="Ciphers aes128-ctr,aes192-ctr,aes256-ctr"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set Idle Timeout Interval for User Login
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^ClientAliveInterval "
+    line="ClientAliveInterval {{ ClientAliveInterval }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set Idle Timeout Interval for User Login
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^ClientAliveCountMax "
+    line="ClientAliveCountMax {{ ClientAliveCountMax }}"
+  notify: reload ssh
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Limit Access via SSH
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^AllowGroups "
+    line="AllowGroups {{ ssh_allow_groups }}"
+  when: ssh_allow_groups is defined
+  notify: reload ssh
+  tags:
+    - sshd
+    - security
+
+
+- name: Ubuntu | Limit Access via SSH
+  lineinfile: >
+    dest=/etc/ssh/sshd_config 
+    regexp="^AllowUsers "
+    line="AllowUsers {{ ssh_allow_users }}"
+  when: ssh_allow_users is defined
+  notify: reload ssh
+  tags:
+    - sshd
+    - security
+
+
+- name: Ubuntu | Limit Access via SSH
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^DenyGroups "
+    line="DenyGroups {{ ssh_deny_groups }}"
+  when: ssh_deny_groups is defined
+  notify: reload ssh
+  tags:
+    - sshd
+    - security
+
+
+- name: Ubuntu | Limit Access via SSH
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^DenyUsers "
+    line="DenyUsers {{ ssh_deny_users }}"
+  when: ssh_deny_users is defined
+  notify: reload ssh
+  tags:
+    - sshd
+    - security
+
+
+- name: Ubuntu | Warning Banner for Standard Login Services
+  file: >
+    name=/etc/issue.net
+    state=absent
+  changed_when: false
+  with_items: 
+    - stats.results
+  when: item.islnk is defined
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set Warning Banner for Standard Login Services
+  copy: >
+    src={{ item }}
+    dest=/etc/{{ item }}
+  with_items:
+    - issue.net
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set Warning Banner for Standard Login Services
+  file: >
+    path=/etc/{{ item }}
+    owner=root
+    group=root
+    mode=0644
+  with_items:
+    - issue.net
+  tags:
+    - sshd
+
+
+- name: Ubuntu | Set SSH Banner
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp="^Banner "
+    line="Banner /etc/issue.net"
+  notify: reload ssh
+  tags:
+    - sshd

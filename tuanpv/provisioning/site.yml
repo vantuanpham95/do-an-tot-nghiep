@@ -1,0 +1,11 @@
+---
+
+
+- hosts: all
+  roles:
+    - users
+    - common
+    - times
+    - hostname
+    - sshd
+    - iptables

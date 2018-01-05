@@ -1,0 +1,30 @@
+---
+
+- name: Install ldirectord for OS Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - sudo
+  tags:
+    - sudo
+
+- name: Ubuntu | Update repositories cache
+  apt: update_cache=yes
+  tags:
+    - common
+
+
+- name: Ubuntu Ensure required base packages are present
+  apt: name={{ item }} state=latest update_cache=yes
+  with_items:
+    - man
+    - gcc
+    - make
+    - perl
+    - bash
+    - wget
+    - libc6
+    - openssh-client
+    - openssh-server
+    - libpam-cracklib
+  tags:
+    - common
